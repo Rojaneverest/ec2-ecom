@@ -79,7 +79,7 @@ st.markdown("---")
 chart_col1, chart_col2 = st.columns(2)
 
 with chart_col1:
-    st.subheader("📊 Minutely Views & Orders")
+    st.subheader("Minutely Views & Orders")
     minutely_views_data = fetch_data("views:minutely")
     df_views = create_timeseries_df(minutely_views_data, "Views")
 
@@ -101,7 +101,7 @@ with chart_col1:
         st.plotly_chart(create_empty_chart('Product Views Over Time (Per Minute)'), use_container_width=True)
 
 with chart_col2:
-    st.subheader("💰 Minutely Revenue")
+    st.subheader("Minutely Revenue")
     minutely_revenue_data = fetch_data("revenue:minutely")
     df_revenue = create_timeseries_df(minutely_revenue_data, "Revenue")
 
@@ -128,7 +128,7 @@ st.markdown("---")
 top_prod_col1, top_prod_col2 = st.columns(2)
 
 with top_prod_col1:
-    st.subheader("🚀 Top 10 Viewed Products")
+    st.subheader("Top 10 Viewed Products")
     top_viewed_data = fetch_data("product:views")
     df_top_viewed = create_leaderboard_df(top_viewed_data, "Views")
 
@@ -144,7 +144,7 @@ with top_prod_col1:
         st.info("No product view data available yet.")
 
 with top_prod_col2:
-    st.subheader("📈 Top 10 Ordered Products")
+    st.subheader("Top 10 Ordered Products")
     top_ordered_data = fetch_data("product:orders")
     df_top_ordered = create_leaderboard_df(top_ordered_data, "Orders")
 
@@ -165,10 +165,10 @@ st.markdown("---")
 activity_col1, activity_col2 = st.columns(2)
 
 with activity_col1:
-    st.subheader("🔥 Recent Orders")
+    st.subheader("Recent Orders")
     recent_orders_raw = fetch_data("recent:orders", 'list')
     if recent_orders_raw:
-        st.info(f"📊 Showing {min(10, len(recent_orders_raw))} most recent orders")
+        st.info(f"Showing {min(10, len(recent_orders_raw))} most recent orders")
         for i, order_json in enumerate(recent_orders_raw[:10]):
             try:
                 order = json.loads(order_json)
@@ -185,10 +185,10 @@ with activity_col1:
         st.info("🔍 No recent orders to display. Waiting for data...")
 
 with activity_col2:
-    st.subheader("👀 Recent Product Views")
+    st.subheader("Recent Product Views")
     recent_views_raw = fetch_data("recent:views", 'list')
     if recent_views_raw:
-        st.info(f"📊 Showing {min(10, len(recent_views_raw))} most recent views")
+        st.info(f"Showing {min(10, len(recent_views_raw))} most recent views")
         for i, view_json in enumerate(recent_views_raw[:10]):
             try:
                 view = json.loads(view_json)

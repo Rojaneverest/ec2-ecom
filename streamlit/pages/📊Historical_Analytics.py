@@ -17,7 +17,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-st.title("🏛️ Historical E-commerce Performance")
+st.title("Historical E-commerce Performance")
 st.markdown("Analysis of aggregated data from the E-Commerce Data Warehouse.")
 
 # --- Load Data ---
@@ -35,7 +35,7 @@ if conn:
 
     # --- SECTION 1: KPI OVERVIEW ---
     st.markdown("---")
-    st.subheader("🚀 Overall Performance Metrics")
+    st.subheader("Overall Performance Metrics")
     
     kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
     total_revenue = sales_df['payment_value'].sum()
@@ -50,7 +50,7 @@ if conn:
 
     # --- SECTION 2: HISTORICAL TRENDS ---
     st.markdown("---")
-    st.subheader("📈 Historical Trends & Geographic Distribution")
+    st.subheader("Historical Trends & Geographic Distribution")
     
     trend_col1, trend_col2 = st.columns(2)
     
@@ -94,7 +94,7 @@ if conn:
 
     # --- SECTION 3: CUSTOMER SEGMENTATION ---
     st.markdown("---")
-    st.subheader("👥 Customer Segmentation (RFM Analysis)")
+    st.subheader("Customer Segmentation (RFM Analysis)")
     st.markdown("Segmenting customers by Recency, Frequency, and Monetary value to identify key groups.")
 
     if not rfm_df.empty:
@@ -166,7 +166,7 @@ if conn:
 
     # --- SECTION 4: SELLER PERFORMANCE ---
     st.markdown("---")
-    st.subheader("🏆 Seller Performance Scorecard")
+    st.subheader("Seller Performance Scorecard")
     st.markdown("Evaluating sellers based on revenue, customer satisfaction, and delivery speed.")
     
     if not seller_perf_df.empty:
@@ -187,7 +187,7 @@ if conn:
 
     # --- SECTION 5: DELIVERY & SATISFACTION ---
     st.markdown("---")
-    st.subheader("🚚 Delivery & Customer Satisfaction Analysis")
+    st.subheader("Delivery & Customer Satisfaction Analysis")
     
     # Delivery Analysis
     delivery_col1, delivery_col2 = st.columns(2)
@@ -269,7 +269,7 @@ if conn:
 
     # --- SECTION 6: BUSINESS INSIGHTS & LEADERBOARDS ---
     st.markdown("---")
-    st.subheader("📊 Business Insights & Leaderboards")
+    st.subheader("Business Insights & Leaderboards")
     
     # Top performers
     leader_col1, leader_col2, leader_col3 = st.columns(3)
