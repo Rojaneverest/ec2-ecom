@@ -119,4 +119,4 @@ with col2:
 
 # Footer
 st.markdown("---")
-st.caption("© 2025 E-commerce Analytics Dashboard | Built for capstone project by Rojan | TechKraft Inc.")
+st.caption("© 2025 E-commerce Analytics Dashboard | Capstone project by Rojan | TechKraft Inc.")
