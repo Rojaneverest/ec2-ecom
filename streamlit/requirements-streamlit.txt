@@ -1,0 +1,10 @@
+# Base requirements (copied from parent directory during build)
+-r requirements.txt
+
+# Streamlit and visualization
+streamlit==1.32.0
+plotly==5.18.0
+
+# Additional Streamlit deps
+snowflake-connector-python>=3.0.0
+redis>=4.3.1

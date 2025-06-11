@@ -1,0 +1,25 @@
+# Core Dependencies
+pandas
+boto3
+
+# Data Processing
+pyarrow
+fastparquet
+
+# Database
+sqlalchemy
+psycopg2-binary
+
+# Kafka & Streaming
+kafka-python>=2.0.2
+confluent-kafka>=2.0.2
+fastavro>=1.4.10
+
+# Redis
+redis>=4.3.1
+
+# Utils
+python-dotenv
+Faker
+streamlit
+plotly
