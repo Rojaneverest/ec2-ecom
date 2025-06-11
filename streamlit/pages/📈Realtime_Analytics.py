@@ -29,11 +29,11 @@ if auto_refresh and time_since_last_refresh >= refresh_rate:
     st.rerun()
 
 # --- Page Title ---
-st.title("📊 Real-Time E-commerce Analytics")
+st.title("Real-Time E-commerce Analytics")
 st.markdown("Monitor live metrics, user activity, and sales as they happen.")
 
 # --- Key Metrics Display ---
-st.subheader("📈 Live Metrics Overview")
+st.subheader("Live Metrics Overview")
 totals = fetch_data("metrics:totals")
 last_updated = totals.get('last_updated', 'Never') if totals else 'Never'
 
