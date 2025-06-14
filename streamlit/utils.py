@@ -60,7 +60,6 @@ def get_snowflake_connection():
         st.error(f"Error connecting to Snowflake: {e}")
         return None
 # --- NEW: Utility Function to Check for Table Existence ---
-@st.cache_data(ttl=600)  # Cache for 10 mins to avoid re-checking on every script rerun
 def check_tables_exist(_conn, required_tables):
     """
     Checks if a list of required tables exists in the connected Snowflake schema.
