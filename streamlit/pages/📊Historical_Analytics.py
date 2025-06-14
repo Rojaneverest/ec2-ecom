@@ -14,7 +14,6 @@ from utils import (
     check_tables_exist
 )
 
-
 st.title("Historical E-commerce Performance")
 st.markdown("Analysis of aggregated data from the E-Commerce Data Warehouse.")
 
@@ -81,7 +80,7 @@ if conn:
     st.markdown("---")
     st.subheader("Historical Trends & Geographic Distribution")
     
-    trend_col1, trend_col2 = st.columns(2)
+    trend_col1, trend_col2 = st.columns(2, gap="large")
     
     with trend_col1:
         st.markdown("##### Daily Sales Trend")
@@ -98,28 +97,45 @@ if conn:
         else:
             st.info("No daily sales data available.")
 
+# Replace the existing geographic sales visualization section with this improved version
+
     with trend_col2:
         st.markdown("##### Sales by Customer State")
         if not geo_sales_df.empty:
-            # Normalize 'total_sales' for better map visualization
-            min_sales = geo_sales_df['total_sales'].min()
-            max_sales = geo_sales_df['total_sales'].max()
-
-            if max_sales > min_sales:
-                geo_sales_df['scaled_sales'] = (
-                    (geo_sales_df['total_sales'] - min_sales) / (max_sales - min_sales)
-                ) * 95 + 5
-            else:
-                geo_sales_df['scaled_sales'] = 5
-
-            st.map(
-                geo_sales_df, 
-                latitude='latitude', 
-                longitude='longitude', 
-                size='scaled_sales'
+            # Create an interactive Plotly scatter map with hover data
+            fig_geo = px.scatter_mapbox(
+                geo_sales_df,
+                lat='latitude',
+                lon='longitude',
+                size='total_sales',
+                color='total_sales',
+                hover_name='customer_state',  # Assuming you have state names
+                hover_data={
+                    'total_sales': ':$,.2f',
+                    'latitude': ':.2f',
+                    'longitude': ':.2f'
+                },
+                color_continuous_scale='Viridis',
+                size_max=30,
+                zoom=3,
+                labels={
+                    'total_sales': 'Total Sales ($)',
+                    'customer_state': 'State'
+                }
             )
-        else:
-            st.info("No geographical sales data available.")
+            
+            # Update map layout for better appearance
+            fig_geo.update_layout(
+                mapbox_style="carto-positron",  # Free map style
+                height=400,
+                margin={"r":0,"t":30,"l":0,"b":0}
+            )
+            
+            # If you want to use a different map style, you can use:
+            # mapbox_style="carto-positron"  # Clean, minimal style
+            # mapbox_style="stamen-terrain"  # Terrain style
+            
+            st.plotly_chart(fig_geo, use_container_width=True)
 
     # --- SECTION 3: CUSTOMER SEGMENTATION ---
     st.markdown("---")
@@ -195,7 +211,7 @@ if conn:
 
     # --- SECTION 4: SELLER PERFORMANCE ---
     st.markdown("---")
-    st.subheader("🏆 Seller Performance Scorecard")
+    st.subheader("Seller Performance Scorecard")
     st.markdown("Evaluating sellers based on revenue, customer satisfaction, and delivery speed.")
 
     if not seller_perf_df.empty:
@@ -269,7 +285,7 @@ if conn:
                 color='delivery_status',
                 title="Avg Review Score: On-Time vs Late Deliveries",
                 labels={'delivery_status': 'Delivery Status', 'review_score': 'Average Review Score'},
-                color_discrete_map={'On-Time': '#2ca02c', 'Late': '#d62728'}
+                color_discrete_map={'On-Time': '#2a9d8f', 'Late': '#e76f51'}
             )
             fig_sat_delivery.update_layout(showlegend=False)
             st.plotly_chart(fig_sat_delivery, use_container_width=True)
@@ -283,7 +299,7 @@ if conn:
                 nbins=50,
                 title='Delivery Time Difference (Actual - Estimated)',
                 labels={'delivery_delta_days': 'Days Early (< 0) or Late (> 0)', 'count': 'Number of Orders'},
-                color_discrete_sequence=['#1f77b4']
+                color_discrete_sequence=['#428BCA']
             )
             fig_delivery_delta.add_vline(x=0, line_dash="dash", line_color="red", 
                                        annotation_text="On Time", annotation_position="top")
@@ -301,7 +317,7 @@ if conn:
                 nbins=5,
                 title='Distribution of Customer Review Scores',
                 labels={'review_score': 'Review Score (1-5)', 'count': 'Number of Reviews'},
-                color_discrete_sequence=['#9467bd']
+                color_discrete_sequence=['#4a4e69']
             )
             fig_review_dist.update_layout(bargap=0.1)
             st.plotly_chart(fig_review_dist, use_container_width=True)
@@ -326,7 +342,7 @@ if conn:
                 orientation='h',
                 title="Highest and Lowest Rated Categories",
                 labels={'product_category_name': 'Product Category', 'review_score': 'Average Review Score'},
-                color_discrete_map={'Top 5': '#2ca02c', 'Bottom 5': '#d62728'}
+                color_discrete_map={'Top 5': '#2a9d8f', 'Bottom 5': '#e76f51'}
             )
             fig_cat_reviews.update_layout(yaxis={'categoryorder': 'total ascending'})
             st.plotly_chart(fig_cat_reviews, use_container_width=True)
@@ -376,7 +392,8 @@ if conn:
                 status_counts, 
                 names='Status', 
                 values='Count', 
-                hole=0.3
+                hole=0.3,
+                color_discrete_map={'shipped': '#5CB85C', 'canceled': '#D9534F', 'delivered': '#669bbc'}
             )
 
             fig_status.update_traces(
@@ -403,7 +420,8 @@ if conn:
                 names='Payment Type', 
                 values='Transactions',
                 title='Payment Methods Distribution', 
-                hole=0.3
+                hole=0.3,
+                color_discrete_map={'credit_card': '#5CB85C', 'canceled': '#D9534F'}
             )
             st.plotly_chart(fig_payment, use_container_width=True)
         else:
