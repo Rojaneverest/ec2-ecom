@@ -14,6 +14,19 @@ from utils import (
     check_tables_exist
 )
 
+# --- Define a professional and consistent color scheme ---
+# This central palette ensures all charts have a unified look.
+COLOR_PALETTE = {
+    "primary": "#005f73",       # Dark Teal
+    "secondary": "#0a9396",     # Lighter Teal
+    "accent": "#ee9b00",        # Amber/Gold for highlights
+    "success": "#2a9d8f",       # Muted Green for positive metrics
+    "danger": "#e76f51",        # Muted Red for negative metrics
+    "neutral": "#6c757d",       # Gray for neutral information
+}
+# A sequential color scale that matches the primary theme for heatmaps and gradients.
+CONTINUOUS_COLOR_SCALE = "Teal"
+
 st.title("Historical E-commerce Performance")
 st.markdown("Analysis of aggregated data from the E-Commerce Data Warehouse.")
 
@@ -92,49 +105,34 @@ if conn:
                 title="Total Revenue Over Time",
                 labels={'total_sales': 'Revenue ($)', 'date': 'Date'}
             )
+            # Apply the professional color scheme
+            fig_daily_sales.update_traces(line_color=COLOR_PALETTE["primary"])
             fig_daily_sales.update_layout(showlegend=False)
             st.plotly_chart(fig_daily_sales, use_container_width=True)
         else:
             st.info("No daily sales data available.")
 
-# Replace the existing geographic sales visualization section with this improved version
-
     with trend_col2:
         st.markdown("##### Sales by Customer State")
         if not geo_sales_df.empty:
-            # Create an interactive Plotly scatter map with hover data
             fig_geo = px.scatter_mapbox(
                 geo_sales_df,
                 lat='latitude',
                 lon='longitude',
                 size='total_sales',
                 color='total_sales',
-                hover_name='customer_state',  # Assuming you have state names
-                hover_data={
-                    'total_sales': ':$,.2f',
-                    'latitude': ':.2f',
-                    'longitude': ':.2f'
-                },
-                color_continuous_scale='Viridis',
+                hover_name='customer_state',
+                hover_data={'total_sales': ':$,.2f', 'latitude': False, 'longitude': False},
+                color_continuous_scale=CONTINUOUS_COLOR_SCALE, # Use themed scale
                 size_max=30,
                 zoom=3,
-                labels={
-                    'total_sales': 'Total Sales ($)',
-                    'customer_state': 'State'
-                }
+                labels={'total_sales': 'Total Sales ($)', 'customer_state': 'State'}
             )
-            
-            # Update map layout for better appearance
             fig_geo.update_layout(
-                mapbox_style="carto-positron",  # Free map style
+                mapbox_style="carto-positron",
                 height=400,
                 margin={"r":0,"t":30,"l":0,"b":0}
             )
-            
-            # If you want to use a different map style, you can use:
-            # mapbox_style="carto-positron"  # Clean, minimal style
-            # mapbox_style="stamen-terrain"  # Terrain style
-            
             st.plotly_chart(fig_geo, use_container_width=True)
 
     # --- SECTION 3: CUSTOMER SEGMENTATION ---
@@ -158,39 +156,30 @@ if conn:
                 title="Customers per Segment",
                 labels={'Segment': 'RFM Segment', 'Count': 'Number of Customers'},
                 color='Count',
-                color_continuous_scale='viridis'
+                color_continuous_scale=CONTINUOUS_COLOR_SCALE # Use themed scale
             )
             fig_rfm_dist.update_layout(
                 yaxis={'categoryorder': 'total ascending'},
-                showlegend=False
+                coloraxis_showscale=False
             )
             st.plotly_chart(fig_rfm_dist, use_container_width=True)
 
         with rfm_col2:
             st.markdown("##### RFM Segment Overview")
             segment_summary = rfm_df.groupby('Segment').agg({
-                'Recency': 'mean',
-                'Frequency': 'mean', 
-                'Monetary': 'mean',
+                'Recency': 'mean', 'Frequency': 'mean', 'Monetary': 'mean',
                 'Segment': 'count'
             }).rename(columns={'Segment': 'Customer_Count'}).reset_index()
             
             fig_rfm_clean = px.scatter(
                 segment_summary,
-                x='Recency', 
-                y='Frequency', 
+                x='Recency', y='Frequency', 
                 color='Segment',
                 size='Customer_Count',
                 title="Average RFM Metrics by Customer Segment",
-                labels={
-                    'Recency': 'Avg Days Since Last Purchase', 
-                    'Frequency': 'Avg Total Orders',
-                    'Customer_Count': 'Number of Customers'
-                },
-                hover_data={
-                    'Monetary': ':.2f',
-                    'Customer_Count': True
-                },
+                labels={'Recency': 'Avg Days Since Last Purchase', 'Frequency': 'Avg Total Orders', 'Customer_Count': 'Number of Customers'},
+                hover_data={'Monetary': ':.2f', 'Customer_Count': True},
+                color_discrete_sequence=px.colors.qualitative.Plotly, # Keep diverse for clarity
                 size_max=80
             )
             fig_rfm_clean.update_layout(
@@ -198,8 +187,7 @@ if conn:
                 yaxis={'title': 'Avg Total Orders (Higher = Better)'}
             )
             st.plotly_chart(fig_rfm_clean, use_container_width=True)
-        
-        # Segment insights table
+            
         st.markdown("##### Segment Insights")
         insight_df = segment_summary.copy()
         insight_df['Avg_Monetary'] = insight_df['Monetary'].round(2)
@@ -210,68 +198,36 @@ if conn:
         st.warning("Could not generate RFM segments.")
 
     # --- SECTION 4: SELLER PERFORMANCE ---
+    # (No charts in this section, so no color changes needed)
     st.markdown("---")
     st.subheader("Seller Performance Scorecard")
     st.markdown("Evaluating sellers based on revenue, customer satisfaction, and delivery speed.")
 
     if not seller_perf_df.empty:
-        # Sort the DataFrame first
         sorted_sellers = seller_perf_df.sort_values('total_revenue', ascending=False).reset_index(drop=True)
-        
-        # --- PAGINATION LOGIC ---
         items_per_page = 10
-        
-        # Initialize session state for the page number
         if 'page_number' not in st.session_state:
             st.session_state.page_number = 0
-
         total_items = len(sorted_sellers)
         total_pages = (total_items // items_per_page) + (1 if total_items % items_per_page > 0 else 0)
-
-        # Get the start and end indices for the current page
         start_idx = st.session_state.page_number * items_per_page
         end_idx = start_idx + items_per_page
         paginated_df = sorted_sellers.iloc[start_idx:end_idx]
-
-        # Display the DataFrame for the current page
-        st.dataframe(
-            paginated_df,
-            use_container_width=True,
-            column_config={
-                "seller_id": "Seller ID",
-                "total_revenue": st.column_config.NumberColumn("Total Revenue ($)", format="$ %.2f"),
-                "total_orders": "Total Orders",
-                "avg_review_score": st.column_config.NumberColumn("Avg. Review (1-5)", format="⭐ %.2f"),
-                "avg_delivery_time": "Avg. Delivery (Days)"
-            },
-            hide_index=True
-        )
-
-        # --- PAGINATION CONTROLS ---
-        # Create columns for the navigation buttons and page indicator
+        st.dataframe(paginated_df, use_container_width=True, column_config={"seller_id": "Seller ID", "total_revenue": st.column_config.NumberColumn("Total Revenue ($)", format="$ %.2f"), "total_orders": "Total Orders", "avg_review_score": st.column_config.NumberColumn("Avg. Review (1-5)", format="⭐ %.2f"), "avg_delivery_time": "Avg. Delivery (Days)"}, hide_index=True)
         nav_col1, nav_col2, nav_col3, _ = st.columns([0.15, 0.15, 0.2, 0.5])
-
-        # "Previous" button
         if nav_col1.button("Previous", use_container_width=True, disabled=(st.session_state.page_number == 0)):
             st.session_state.page_number -= 1
             st.experimental_rerun()
-
-        # "Next" button
         if nav_col2.button("Next", use_container_width=True, disabled=(st.session_state.page_number >= total_pages - 1)):
             st.session_state.page_number += 1
             st.experimental_rerun()
-
-        # Page indicator
         nav_col3.markdown(f"Page **{st.session_state.page_number + 1}** of **{total_pages}**")
-
     else:
         st.warning("Could not generate Seller Performance data.")
 
     # --- SECTION 5: DELIVERY & SATISFACTION ---
     st.markdown("---")
     st.subheader("Delivery & Customer Satisfaction Analysis")
-    
-    # Delivery Analysis
     delivery_col1, delivery_col2 = st.columns(2)
 
     with delivery_col1:
@@ -280,12 +236,11 @@ if conn:
             satisfaction_by_delivery = sales_df.groupby('delivery_status')['review_score'].mean().reset_index()
             fig_sat_delivery = px.bar(
                 satisfaction_by_delivery,
-                x='delivery_status', 
-                y='review_score', 
+                x='delivery_status', y='review_score', 
                 color='delivery_status',
                 title="Avg Review Score: On-Time vs Late Deliveries",
                 labels={'delivery_status': 'Delivery Status', 'review_score': 'Average Review Score'},
-                color_discrete_map={'On-Time': '#2a9d8f', 'Late': '#e76f51'}
+                color_discrete_map={'On-Time': COLOR_PALETTE["primary"], 'Late': COLOR_PALETTE["secondary"]}
             )
             fig_sat_delivery.update_layout(showlegend=False)
             st.plotly_chart(fig_sat_delivery, use_container_width=True)
@@ -294,30 +249,23 @@ if conn:
         st.markdown("##### Delivery Timeliness Distribution")
         if not sales_df.empty and 'delivery_delta_days' in sales_df.columns:
             fig_delivery_delta = px.histogram(
-                sales_df, 
-                x='delivery_delta_days', 
-                nbins=50,
+                sales_df, x='delivery_delta_days', nbins=50,
                 title='Delivery Time Difference (Actual - Estimated)',
                 labels={'delivery_delta_days': 'Days Early (< 0) or Late (> 0)', 'count': 'Number of Orders'},
-                color_discrete_sequence=['#428BCA']
+                color_discrete_sequence=[COLOR_PALETTE["primary"]] # Use themed color
             )
-            fig_delivery_delta.add_vline(x=0, line_dash="dash", line_color="red", 
-                                       annotation_text="On Time", annotation_position="top")
+            fig_delivery_delta.add_vline(x=0, line_dash="dash", line_color=COLOR_PALETTE["danger"], annotation_text="On Time", annotation_position="top")
             st.plotly_chart(fig_delivery_delta, use_container_width=True)
 
-    # Customer Satisfaction Analysis
     sat_col1, sat_col2 = st.columns(2)
-
     with sat_col1:
         st.markdown("##### Review Score Distribution")
         if not sales_df.empty and 'review_score' in sales_df.columns:
             fig_review_dist = px.histogram(
-                sales_df, 
-                x='review_score', 
-                nbins=5,
+                sales_df, x='review_score', nbins=5,
                 title='Distribution of Customer Review Scores',
                 labels={'review_score': 'Review Score (1-5)', 'count': 'Number of Reviews'},
-                color_discrete_sequence=['#4a4e69']
+                color_discrete_sequence=[COLOR_PALETTE["secondary"]] # Use themed color
             )
             fig_review_dist.update_layout(bargap=0.1)
             st.plotly_chart(fig_review_dist, use_container_width=True)
@@ -328,7 +276,6 @@ if conn:
         st.markdown("##### Top & Bottom Categories by Reviews")
         if not sales_df.empty and 'product_category_name' in sales_df.columns:
             category_reviews = sales_df.groupby('product_category_name')['review_score'].mean().dropna().sort_values()
-            
             top_5 = category_reviews.nlargest(5)
             bottom_5 = category_reviews.nsmallest(5)
             combined_reviews = pd.concat([top_5, bottom_5]).reset_index()
@@ -336,13 +283,12 @@ if conn:
             
             fig_cat_reviews = px.bar(
                 combined_reviews,
-                x='review_score', 
-                y='product_category_name', 
+                x='review_score', y='product_category_name', 
                 color='Performance',
                 orientation='h',
                 title="Highest and Lowest Rated Categories",
                 labels={'product_category_name': 'Product Category', 'review_score': 'Average Review Score'},
-                color_discrete_map={'Top 5': '#2a9d8f', 'Bottom 5': '#e76f51'}
+                color_discrete_map={'Top 5': COLOR_PALETTE["primary"], 'Bottom 5': COLOR_PALETTE["secondary"]}
             )
             fig_cat_reviews.update_layout(yaxis={'categoryorder': 'total ascending'})
             st.plotly_chart(fig_cat_reviews, use_container_width=True)
@@ -352,8 +298,6 @@ if conn:
     # --- SECTION 6: BUSINESS INSIGHTS & LEADERBOARDS ---
     st.markdown("---")
     st.subheader("Business Insights & Leaderboards")
-    
-    # Top performers
     leader_col1, leader_col2, leader_col3 = st.columns(3)
 
     with leader_col1:
@@ -381,34 +325,21 @@ if conn:
         if not raw_sales_df.empty and 'order_status' in raw_sales_df.columns:
             status_counts = raw_sales_df['order_status'].value_counts().reset_index() 
             status_counts.columns = ['Status', 'Count']
-
-            # Exclude "unavailable"
             status_counts = status_counts[status_counts['Status'].str.lower() != 'unavailable']
-
-            # Pull out small slices
             pull_values = np.where(status_counts['Status'].isin(['shipped', 'canceled']), 0.1, 0)
 
             fig_status = px.pie(
                 status_counts, 
-                names='Status', 
-                values='Count', 
-                hole=0.3,
-                color_discrete_map={'shipped': '#5CB85C', 'canceled': '#D9534F', 'delivered': '#669bbc'}
+                names='Status', values='Count', hole=0.3,
+                # Apply a consistent color sequence
+                color_discrete_sequence=[COLOR_PALETTE["primary"], COLOR_PALETTE["success"], COLOR_PALETTE["accent"], COLOR_PALETTE["danger"], COLOR_PALETTE["secondary"], COLOR_PALETTE["neutral"]]
             )
-
-            fig_status.update_traces(
-                textinfo='percent',
-                textposition='outside',
-                pull=pull_values
-            )
-
+            fig_status.update_traces(textinfo='percent', textposition='outside', pull=pull_values)
             st.plotly_chart(fig_status, use_container_width=True)
         else:
             st.warning("No order status data available.")
 
-    # Payment Analysis
     payment_col1, payment_col2 = st.columns(2)
-
     with payment_col1:
         st.markdown("##### Payment Method Popularity")
         if not sales_df.empty and 'payment_type' in sales_df.columns:
@@ -416,12 +347,10 @@ if conn:
             payment_dist.columns = ['Payment Type', 'Transactions']
             
             fig_payment = px.pie(
-                payment_dist, 
-                names='Payment Type', 
-                values='Transactions',
-                title='Payment Methods Distribution', 
-                hole=0.3,
-                color_discrete_map={'credit_card': '#5CB85C', 'canceled': '#D9534F'}
+                payment_dist, names='Payment Type', values='Transactions',
+                title='Payment Methods Distribution', hole=0.3,
+                # Apply a consistent color sequence
+                color_discrete_sequence=[COLOR_PALETTE["primary"], COLOR_PALETTE["secondary"], COLOR_PALETTE["accent"], COLOR_PALETTE["neutral"]]
             )
             st.plotly_chart(fig_payment, use_container_width=True)
         else:
@@ -438,7 +367,7 @@ if conn:
                     title='Credit Card Installment Distribution',
                     labels={'payment_installments': 'Number of Installments', 'count': 'Frequency'},
                     nbins=int(cc_payments['payment_installments'].max()) if cc_payments['payment_installments'].max() > 0 else 10,
-                    color_discrete_sequence=['#9467bd']
+                    color_discrete_sequence=[COLOR_PALETTE["primary"]] # Use accent color
                 )
                 st.plotly_chart(fig_installments, use_container_width=True)
             else:
