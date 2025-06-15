@@ -358,7 +358,7 @@ def load_sales_overview_data(_conn):
         LEFT JOIN {DWH_DB}.{DWH_SCHEMA}.DWH_CUSTOMERS AS c ON o.CUSTOMER_ID = c.CUSTOMER_ID
         LEFT JOIN {DWH_DB}.{DWH_SCHEMA}.DWH_SELLERS AS s ON oi.SELLER_ID = s.SELLER_ID
         LEFT JOIN {DWH_DB}.{DWH_SCHEMA}.DWH_ORDER_REVIEWS AS r ON o.ORDER_ID = r.ORDER_ID
-        WHERE o.ORDER_PURCHASE_TIMESTAMP IS NOT NULL AND oi.PRICE IS NOT NULL;
+        WHERE o.ORDER_PURCHASE_TIMESTAMP > '1900-01-01 00:00:00'::TIMESTAMP_NTZ AND oi.PRICE IS NOT NULL;
     """
     
     cursor = _conn.cursor()
@@ -381,6 +381,7 @@ def load_daily_sales_data(_conn):
         FROM {DWH_DB}.{DWH_SCHEMA}.DWH_ORDERS AS o
         JOIN {DWH_DB}.{DWH_SCHEMA}.DWH_ORDER_PAYMENTS AS op ON o.ORDER_ID = op.ORDER_ID
         WHERE o.ORDER_STATUS NOT IN ('unavailable', 'canceled')
+        AND o.ORDER_PURCHASE_TIMESTAMP > '1900-01-01 00:00:00'::TIMESTAMP_NTZ -- FIX: Exclude 1900 fallback dates
         GROUP BY 1 ORDER BY 1;
     """
     cursor = _conn.cursor()
